@@ -7,6 +7,7 @@ Claude's last words from the transcript, and lets you switch to a session.
 
 Usage:
   blobby.py                 full report of all sessions
+  blobby.py list            list every session that needs your input
   blobby.py <session-id>    switch to that session (accepts id or name):
                               live -> focus its window
                               not running -> open `claude --resume <id>`
@@ -169,6 +170,25 @@ def report(sessions):
         print("\n" + res if res else "\nCouldn't auto-focus a window — switch to it manually.")
 
 
+def list_waiting(sessions):
+    """Compact list of every session that needs input (idle), no side effects."""
+    waiting = [s for s in sessions if s.get("status") == "idle"]
+    if not waiting:
+        print("Nothing needs your input right now — Blobby is calm. 😌")
+        return
+    verb = "needs" if len(waiting) == 1 else "need"
+    print(f"{len(waiting)} session{'s' if len(waiting) != 1 else ''} {verb} your input:")
+    for s in waiting:
+        label = session_label(s)
+        short_id = (s.get("sessionId") or "")[:8]
+        proj = project_name(s.get("cwd", ""))
+        print(f"⚠ {label}  [{short_id}]  {proj}")
+        words = last_words(s.get("cwd", ""), s.get("sessionId"), limit=110, single_line=True)
+        if words:
+            print(f'   waiting: "{words}"')
+    print("\nRun /blobby <id> to switch to one of them.")
+
+
 def main():
     args = sys.argv[1:]
     sessions = get_sessions()
@@ -177,6 +197,9 @@ def main():
         return 0
     if args:
         key = args[0]
+        if key in ("list", "ls", "-l", "--list"):
+            list_waiting(sessions)
+            return 0
         target = next((s for s in sessions
                        if s.get("sessionId", "").startswith(key) or key in session_label(s)), None)
         if target:

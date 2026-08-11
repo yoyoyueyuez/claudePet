@@ -186,7 +186,7 @@ def render_alert(waiting):
     short_id = (head.get("sessionId") or "")[:8]
     caption = f"⚠ {label} [{short_id}] needs you"
     if len(waiting) > 1:
-        caption += f" · +{len(waiting) - 1} more (run /blobby)"
+        caption += f" · +{len(waiting) - 1} more (run /blobby list)"
     return caption
 
 
